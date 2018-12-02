@@ -4,16 +4,23 @@ import scala.io.Source
 
 object Day2 extends App {
 
-  val testData: List[String] = getData("2018/2/test.txt")
-  assert(testData.length == 7)
-  assert(findChecksum(testData) == 12)
+  val testDataStar1: List[String] = getData("2018/2/testStar1.txt")
+  assert(testDataStar1.length == 7)
+  assert(findChecksum(testDataStar1) == 12)
+
+  val testDataStar2: List[String] = getData("2018/2/testStar2.txt")
+  assert(findSingularCharDiff(testDataStar2) == "fgij")
 
   val input: List[String] = getData("2018/2/input.txt")
 
   val firstStar = findChecksum(input)
   println(s"firstStar: $firstStar")
-  assert(firstStar == 5166)
 
+  val secondStar = findSingularCharDiff(input)
+  println(s"secondStar: $secondStar")
+
+  assert(firstStar == 5166)
+  assert(secondStar == "cypueihajytordkgzxfqplbwn")
 
   def findChecksum(testData: List[String]): Int = {
     testData.map(
@@ -28,6 +35,26 @@ object Day2 extends App {
     .groupBy(identity)
     .map(_._2.size)
     .product
+  }
+
+  def findSingularCharDiff(data: List[String]): String = {
+    val checkSize = data.head.length - 1
+    val diffingByOneChar = (
+      for {
+        comb ← data.combinations(2).toList
+        first = comb.head
+        second = comb.last
+      } yield for {
+        (a, b) <- first zip second
+        if a == b
+      } yield (a, b)
+    )
+      .filterNot(_.isEmpty)
+      .filter(tuples ⇒ tuples.length == checkSize)
+
+    if (diffingByOneChar.length != 1) throw new Exception(s"Diff by one not distinct - $diffingByOneChar")
+
+    diffingByOneChar.head.map(_._1).mkString("")
   }
 
   def getData(path: String): List[String] = Source.fromResource(path).getLines().toList
