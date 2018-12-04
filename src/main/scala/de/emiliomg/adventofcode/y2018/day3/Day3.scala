@@ -1,4 +1,4 @@
-package de.emiliomg.adventofcode.y2018.day2.day3
+package de.emiliomg.adventofcode.y2018.day3
 
 import scala.io.Source
 import scala.util.matching.Regex
@@ -11,24 +11,41 @@ object Day3 extends App {
   assert(testData.length == 3)
 
   assert(findOverlappingSquareCount(testData) == 4)
+  assert(findClaimIDWithoutCollisions(testData) == 3)
 
   val input = parseData(getData("2018/3/input.txt"))
   assert(input.length == 1385)
 
-  def firstStar = findOverlappingSquareCount(input)
+  def firstStar: Int = findOverlappingSquareCount(input)
+  def secondStar: Int = findClaimIDWithoutCollisions(input)
+
   println(s"first star: $firstStar")
+  println(s"second star: $secondStar")
 
   assert(firstStar == 116491)
-
+  assert(secondStar == 707)
 
   def findOverlappingSquareCount(data: List[FabricClaim]): Int = {
     val squarePositionCounts: Map[Position, List[ClaimID]] = processFabricClaims(data)
 
-    val collisions = squarePositionCounts
+    val collisionPositions = squarePositionCounts
       .filter { case (_, claims) ⇒ claims.length > 1}
       .keys
 
-    collisions.size
+    collisionPositions.size
+  }
+
+  def findClaimIDWithoutCollisions(data: List[FabricClaim]): Int = {
+    val squarePositionCounts: Map[Position, List[ClaimID]] = processFabricClaims(data)
+    val collisionIds: List[ClaimID] = squarePositionCounts
+      .filter { case (_, claims) ⇒ claims.length > 1}
+      .flatMap(_._2)
+      .toList
+
+    val result = data.map(_.id).filterNot(collisionIds.contains)
+    assert(result.length == 1)
+
+    result.head
   }
 
   def processFabricClaims(data: List[FabricClaim]): Map[Position, List[ClaimID]] = {
