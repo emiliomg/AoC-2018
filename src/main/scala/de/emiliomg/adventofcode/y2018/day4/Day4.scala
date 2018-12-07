@@ -11,19 +11,61 @@ object Day4 extends App {
   val testGuards: List[Guard] = buildGuards(testData)
 
   assert(firstStrategy(testGuards) == 240)
+  assert(secondStragety(testGuards) == 4455)
 
   val data: List[Event] = parseData(getData("2018/4/input.txt")).sortWith((a, b) ⇒ a.ts.isBefore(b.ts))
   val guards: List[Guard] = buildGuards(data)
 
   val firstStar = firstStrategy(guards)
+  val secondStar = secondStragety(guards)
 
   println(s"First Star: $firstStar")
+  println(s"Second Star: $secondStar")
 
   assert(firstStar == 11367)
+  assert(secondStar == 36896)
 
+  /**
+    * Strategy 1: Find the guard that has the most minutes asleep. What minute does that guard spend asleep the most?
+    *
+    * @param guards
+    * @return
+    */
   def firstStrategy(guards: List[Guard]): Int = {
     val mostSleepyGuard: Guard = guards.maxBy(_.getAllMinutesAsleep)
-    mostSleepyGuard.id * mostSleepyGuard.getMinuteMostSleptInt
+    val getMinuteMostSleptInt: Int = mostSleepyGuard
+      .allMinutesAsleep
+      .values
+      .flatten
+      .groupBy(identity)
+      .maxBy{ case (_, list) ⇒ list.size}
+      ._1
+
+    mostSleepyGuard.id * getMinuteMostSleptInt
+  }
+
+  /**
+    * Strategy 2: Of all guards, which guard is most frequently asleep on the same minute?
+    *
+    * @param guards
+    * @return
+    */
+  def secondStragety(guards: List[Guard]): Int = {
+    val guardWithMostMinutesAsleep = // (99,Map(42 -> 2, 37 -> 1, 52 -> 1, 46 -> 2, 38 -> 1, 53 -> 1, 41 -> 2, 45 -> 3, 44 -> 2, 54 -> 1, 49 -> 2, 39 -> 1, 48 -> 2, 50 -> 1, 43 -> 2, 40 -> 2, 36 -> 1, 51 -> 1, 47 -> 2))
+      guards.map { g ⇒
+        val mostMinutesAsleep = g
+          .allMinutesAsleep
+          .values
+          .flatten
+          .groupBy(identity)
+          .mapValues(_.size)
+
+        g.id → mostMinutesAsleep
+      }
+      .filterNot { case (_, map) ⇒ map.isEmpty }
+      .maxBy { case (_, map) ⇒ map.values.max}
+
+    guardWithMostMinutesAsleep._1 * guardWithMostMinutesAsleep._2.maxBy(_._2)._1
   }
 
   def buildGuards(data: List[Event]): List[Guard] = {
@@ -68,14 +110,6 @@ case class Guard(id: Int, allMinutesAsleep: Map[LocalDate, List[Int]]) {
   def getAllMinutesAsleep: Int = {
     allMinutesAsleep.values.flatten.size
   }
-
-  def getMinuteMostSleptInt: Int =
-    allMinutesAsleep
-      .values
-      .flatten
-      .groupBy(identity)
-      .maxBy{ case (_, list) ⇒ list.size}
-      ._1
 }
 object Guard {
   def apply(gid: Int): Guard = Guard(gid, Map())
