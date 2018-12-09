@@ -97,8 +97,8 @@ object Day4 extends App {
     handleStart(data, Map()).values.toList
   }
 
-  def getData(path: String): String = Source.fromResource(path).getLines().mkString("\n")
-  def parseData(data: String): List[Event] = SleepPatternParser.parse(SleepPatternParser.events, data).get
+  def getData(path: String): List[String] = Source.fromResource(path).getLines().toList
+  def parseData(data: List[String]): List[Event] = data.map(row ⇒ SleepPatternParser.parse(SleepPatternParser.event, row).get)
 }
 
 case class Guard(id: Int, allMinutesAsleep: Map[LocalDate, List[Int]]) {
