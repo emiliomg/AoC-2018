@@ -15,28 +15,40 @@ object Day6 extends App {
 
   val testData = parseData[Point](getData("2018/6/test.txt"))(parseRow)
 
-  //  secondStar(testData)
+  assert(firstStar(testData) == 17)
+  assert(secondStar(testData, 32) == 16)
 
-    assert(firstStar(testData) == 17)
-  //  assert(secondStar(testData) == ???)
+  val data = parseData(getData("2018/6/input.txt"))(parseRow)
 
-    val data = parseData(getData("2018/6/input.txt"))(parseRow)
+  val firstStarResult = firstStar(data)
+  val secondStarResult = secondStar(data, 10000)
 
-    val firstStarResult = firstStar(data)
-  //  val secondStarResult = secondStar(data)
-
-    println(s"Result first star: $firstStarResult")
-  //  println(s"Result second star: secondStarResults}")
+  println(s"Result first star: $firstStarResult")
+  println(s"Result second star: $secondStarResult")
 
   assert(firstStarResult == 5532)
+  assert(secondStarResult == 36216)
 
   def firstStar(providedPoints: List[Point]): Int = {
     largestFiniteArea(providedPoints)
   }
 
-  //  def secondStar(data: ???) = {
-  //    ???
-  //  }
+  def secondStar(providedPoints: List[Point], maxDistance: Int): Int = {
+    largestAreaSizeWithMaxDistanceSum(maxDistance, providedPoints)
+  }
+
+  def largestAreaSizeWithMaxDistanceSum(maxDistance: Int, providedPoints: List[Point]): Int = {
+    def getDistanceSumToProvicedPoints(pos: Point): Int = providedPoints.map(_.manhattanDistanceTo(pos)).sum
+
+    val grid = Grid(providedPoints)
+    val region: Iterator[Int] = for {
+      pos ← grid.iterateGridPoints
+      dist = getDistanceSumToProvicedPoints(pos)
+      if dist < maxDistance
+    } yield dist
+
+    region.size
+  }
 
   def largestFiniteArea(providedPoints: List[Point]): Int = {
     def getClosestPointForPosition(pos: Point): Option[Point] = {
@@ -47,7 +59,7 @@ object Day6 extends App {
 
     val grid = Grid(providedPoints)
 
-    // Map(gridPosition -> providedDataPoint)
+    // => Map(gridPosition -> providedDataPoint)
     val processedGrid: Map[Point, Point] = (for {
       pos ← grid.iterateGridPoints
       closest ← getClosestPointForPosition(pos)
