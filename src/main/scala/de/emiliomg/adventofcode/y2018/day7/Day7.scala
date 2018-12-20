@@ -11,8 +11,8 @@ object Day7 extends App {
 
   val testData = parseData(getData("2018/7/test.txt"))
 
-  println(firstStar(testData))
-//  secondStar(testData)
+//  println(firstStar(testData))
+//  println(secondStar(testData))
 
   assert(firstStar(testData) == "CABDFE")
 //  assert(secondStar(testData) == ???)
@@ -38,29 +38,23 @@ object Day7 extends App {
 
   def getNodeProcessingOrder(data: Set[Node]) = {
     @tailrec
-    def step(graph: Set[Node], checkMe: Set[Char], acc: Array[Char]): String = {
+    def step(graph: Graph, checkMe: Set[Char], acc: Array[Char]): String = {
       checkMe.toList.sorted.headOption match {
-        case Some(current) ⇒
-          val currentNode = getNodeByName(graph)(current)
-          val newGraph = graph - currentNode + currentNode.copy(isVisited = true)
-
-          val newNodesToProcess: Set[Char] =
-            currentNode.next.map(getNodeByName(newGraph))
-              .filter(node ⇒ node.previous.forall(n ⇒ getNodeByName(newGraph)(n).isVisited))
-              .map(_.name)
-
-          val newCheckMe = checkMe - current ++ newNodesToProcess
-          val newAcc = acc :+ current
+        case Some(chosenNodeName) ⇒
+          val newGraph = graph.setNodeToVisited(chosenNodeName)
+          val newCheckMe = checkMe - chosenNodeName ++ newGraph.getNextProcessableNodesFromNode(chosenNodeName)
+          val newAcc = acc :+ chosenNodeName
 
           step(newGraph, newCheckMe, newAcc)
         case None ⇒ acc.mkString
       }
     }
 
-    step(data, data.filter(_.previous.isEmpty).map(_.name), Array())
+    val startGraph = Graph(data)
+    step(startGraph, startGraph.getFirstProcessableNodes, Array())
   }
 
-  def getNodeByName(data: Set[Node])(name: Char): Node = data.find(_.name == name).get
+
 
   def getData(path: String): List[String] = Source.fromResource(path).getLines().toList
   def parseData(data: List[String]): Set[Node] = data.foldLeft(Set[Node]())((acc, row) ⇒ parseRow(row, acc))
@@ -75,6 +69,24 @@ object Day7 extends App {
       acc.filterNot(n ⇒ List(firstName, secondName).contains(n.name)) + first.addNext(second.name) + second.addPrevious(first.name)
     case nope ⇒ throw new Exception(s"Found $nope, cannot match!")
   }
+}
+
+case class Graph(nodes: Set[Node]) {
+  def getNodeByName(name: Char): Node = nodes.find(_.name == name).get
+
+  def setNodeToVisited(node: Node): Graph = copy(nodes = nodes - node + node.copy(isVisited = true))
+  def setNodeToVisited(name: Char): Graph = setNodeToVisited(getNodeByName(name))
+
+  def getNextProcessableNodesFromNode(currentNode: Node): Set[Char] = {
+    currentNode
+      .next
+      .map(getNodeByName)
+      .filter(node ⇒ node.previous.forall(n ⇒ getNodeByName(n).isVisited))
+      .map(_.name)
+  }
+  def getNextProcessableNodesFromNode(currentNodeName: Char): Set[Char] = getNextProcessableNodesFromNode(getNodeByName(currentNodeName))
+
+  def getFirstProcessableNodes: Set[Char] = nodes.filter(_.previous.isEmpty).map(_.name)
 }
 
 case class Node(name: Char, previous: Set[Char], next: Set[Char], isVisited: Boolean) {
